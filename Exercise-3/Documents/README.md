@@ -140,6 +140,6 @@ Beyond unit tests, the flows were checked against the running app and the real C
 - [ ] Stop the server while on the list, click Try again: clear "couldn't reach the server" message.
 - [ ] API key page with no key: banner "AI analysis is paused: no Claude API key is set" on every page.
 - [ ] Paste `hello`: rejected as not an Anthropic key. Paste a well-formed fake key: Anthropic rejects it. Nothing saved either time.
-- [ ] Paste a real key: status "Working", banner disappears, only last 4 characters shown.
+- [ ] Paste a real key: the page switches to "Current key" (status "Working", last 4 characters only), the header dot turns green, the banner disappears. Replace key swaps back to the form (Cancel returns); Delete key asks to confirm, then the page shows "Add a key" again and the dot turns red.
 - [ ] Expired key: set a fake `ANTHROPIC_API_KEY` with no key saved in the app, create an intake → it fails with "update it in Settings" and the banner appears; save a real key → the intake re-runs and completes.
 - [ ] Theme: with the system in dark mode the app is dark; the sun/moon button switches and survives a reload. Check the timeline dropdown and the delete dialog in both themes.

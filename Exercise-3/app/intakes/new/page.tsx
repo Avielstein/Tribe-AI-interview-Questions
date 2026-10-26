@@ -285,9 +285,11 @@ export default function NewIntakePage() {
           </p>
         )}
 
-        <button type="submit" disabled={saving} className={btnFilled}>
-          {saving ? "Saving…" : "Create intake"}
-        </button>
+        <div className="flex justify-center pt-2">
+          <button type="submit" disabled={saving} className={btnFilled}>
+            {saving ? "Saving…" : "Create intake"}
+          </button>
+        </div>
       </form>
     </main>
   );
