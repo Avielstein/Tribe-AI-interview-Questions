@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # Optional: a Claude key can also be pasted in the app (key icon in the header).
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
+      # live | mock (no key needed) | fail (demo the error state)
+      LLM_MODE: ${LLM_MODE:-live}
+    volumes:
+      - intake-data:/data # SQLite database survives restarts
+
+volumes:
+  intake-data:

@@ -1,0 +1,27 @@
+# Intake Triage: what you need to run it.
+#
+# This is a Node.js app, so this file is a human-readable checklist, not a pip file.
+# Exact library versions are pinned in package-lock.json and installed with `npm ci`.
+
+## Option 1: Docker (nothing else needed)
+Docker Desktop (or Docker Engine) with Compose v2
+
+## Option 2: run locally
+Node.js >= 20.19 (tested on 20.20 and 22)
+npm >= 10
+
+## For the AI feature (either option)
+A Claude API key from console.anthropic.com
+  - paste it in the app (key icon in the header), or
+  - set ANTHROPIC_API_KEY in .env (local) or your shell (Docker)
+  - or set LLM_MODE=mock to run without a key
+
+## Main libraries (installed automatically; versions in package-lock.json)
+next 16             # frontend + API (App Router, Route Handlers)
+react 19
+@prisma/client 7    # ORM
+@prisma/adapter-better-sqlite3 7, better-sqlite3 12   # SQLite driver
+@anthropic-ai/sdk 1 # Claude API
+zod 4               # validation (form, API, AI output)
+tailwindcss 4       # styling
+vitest 4            # tests (dev only)

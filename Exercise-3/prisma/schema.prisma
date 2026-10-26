@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum AiStatus {
+  PENDING
+  COMPLETE
+  FAILED
+}
+
+enum KeyStatus {
+  UNVERIFIED
+  VALID
+  INVALID
+}
+
+model Intake {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  budgetRange String   @map("budget_range")
+  timeline    String
+  industry    String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // AI enrichment: the intake is saved first, then filled in by the LLM.
+  aiStatus    AiStatus @default(PENDING) @map("ai_status")
+  summary     String?
+  tags        Json? // string[3]
+  risks       Json? // string[]
+  aiError     String?  @map("ai_error")
+  aiErrorCode String?  @map("ai_error_code") // see lib/ai/errors.ts
+  aiAttempts  Int      @default(0) @map("ai_attempts")
+
+  @@index([createdAt])
+  @@map("intakes")
+}
+
+// Single row (id = 1): the Claude API key entered in the UI, and the last known
+// health of whichever key is active (UI key, else ANTHROPIC_API_KEY).
+model LlmSettings {
+  id        Int       @id @default(1)
+  apiKey    String?   @map("api_key")
+  keyStatus KeyStatus @default(UNVERIFIED) @map("key_status")
+  keyError  String?   @map("key_error")
+  checkedAt DateTime? @map("checked_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("llm_settings")
+}

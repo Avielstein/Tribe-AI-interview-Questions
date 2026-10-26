@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/*
+ * Material 3 color roles (baseline scheme), light and dark.
+ * Components use these tokens (bg-surface, text-on-surface, border-outline, ...)
+ * instead of raw colors, so they follow the system light/dark setting.
+ * success / warning / info are not M3 core roles; they follow the same tonal pattern.
+ */
+:root {
+  color-scheme: light dark; /* native controls (select menus, number spinners) match the theme */
+
+  --md-primary: #6750a4;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #eaddff;
+  --md-on-primary-container: #21005d;
+
+  --md-surface: #fef7ff;
+  --md-surface-container-low: #f7f2fa;
+  --md-surface-container: #f3edf7;
+  --md-surface-container-high: #ece6f0;
+  --md-on-surface: #1d1b20;
+  --md-on-surface-variant: #49454f;
+  --md-outline: #79747e;
+  --md-outline-variant: #cac4d0;
+
+  --md-error: #b3261e;
+  --md-on-error: #ffffff;
+  --md-error-container: #f9dedc;
+  --md-on-error-container: #410e0b;
+
+  --md-success: #386a20;
+  --md-success-container: #b7f397;
+  --md-on-success-container: #042100;
+  --md-warning: #7a5900;
+  --md-warning-container: #ffdea6;
+  --md-on-warning-container: #261900;
+  --md-info: #00639b;
+  --md-info-container: #cee5ff;
+  --md-on-info-container: #001d33;
+}
+
+/* Dark: follow the system unless the user picked a theme with the toggle (data-theme on <html>). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --md-primary: #d0bcff;
+    --md-on-primary: #381e72;
+    --md-primary-container: #4f378b;
+    --md-on-primary-container: #eaddff;
+
+    --md-surface: #141218;
+    --md-surface-container-low: #1d1b20;
+    --md-surface-container: #211f26;
+    --md-surface-container-high: #2b2930;
+    --md-on-surface: #e6e0e9;
+    --md-on-surface-variant: #cac4d0;
+    --md-outline: #938f99;
+    --md-outline-variant: #49454f;
+
+    --md-error: #f2b8b5;
+    --md-on-error: #601410;
+    --md-error-container: #8c1d18;
+    --md-on-error-container: #f9dedc;
+
+    --md-success: #9cd67d;
+    --md-success-container: #1f5106;
+    --md-on-success-container: #b7f397;
+    --md-warning: #f8bd2a;
+    --md-warning-container: #5c4300;
+    --md-on-warning-container: #ffdea6;
+    --md-info: #93ccff;
+    --md-info-container: #004a77;
+    --md-on-info-container: #cee5ff;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --md-primary: #d0bcff;
+  --md-on-primary: #381e72;
+  --md-primary-container: #4f378b;
+  --md-on-primary-container: #eaddff;
+
+  --md-surface: #141218;
+  --md-surface-container-low: #1d1b20;
+  --md-surface-container: #211f26;
+  --md-surface-container-high: #2b2930;
+  --md-on-surface: #e6e0e9;
+  --md-on-surface-variant: #cac4d0;
+  --md-outline: #938f99;
+  --md-outline-variant: #49454f;
+
+  --md-error: #f2b8b5;
+  --md-on-error: #601410;
+  --md-error-container: #8c1d18;
+  --md-on-error-container: #f9dedc;
+
+  --md-success: #9cd67d;
+  --md-success-container: #1f5106;
+  --md-on-success-container: #b7f397;
+  --md-warning: #f8bd2a;
+  --md-warning-container: #5c4300;
+  --md-on-warning-container: #ffdea6;
+  --md-info: #93ccff;
+  --md-info-container: #004a77;
+  --md-on-info-container: #cee5ff;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+@theme inline {
+  --font-sans: var(--font-roboto);
+  --font-mono: var(--font-geist-mono);
+
+  --color-primary: var(--md-primary);
+  --color-on-primary: var(--md-on-primary);
+  --color-primary-container: var(--md-primary-container);
+  --color-on-primary-container: var(--md-on-primary-container);
+
+  --color-surface: var(--md-surface);
+  --color-surface-container-low: var(--md-surface-container-low);
+  --color-surface-container: var(--md-surface-container);
+  --color-surface-container-high: var(--md-surface-container-high);
+  --color-on-surface: var(--md-on-surface);
+  --color-on-surface-variant: var(--md-on-surface-variant);
+  --color-outline: var(--md-outline);
+  --color-outline-variant: var(--md-outline-variant);
+
+  --color-error: var(--md-error);
+  --color-on-error: var(--md-on-error);
+  --color-error-container: var(--md-error-container);
+  --color-on-error-container: var(--md-on-error-container);
+
+  --color-success: var(--md-success);
+  --color-success-container: var(--md-success-container);
+  --color-on-success-container: var(--md-on-success-container);
+  --color-warning: var(--md-warning);
+  --color-warning-container: var(--md-warning-container);
+  --color-on-warning-container: var(--md-on-warning-container);
+  --color-info: var(--md-info);
+  --color-info-container: var(--md-info-container);
+  --color-on-info-container: var(--md-on-info-container);
+}
+
+/* Layered so Tailwind utilities on <body> can still override it. */
+@layer base {
+  body {
+    background: var(--md-surface);
+    color: var(--md-on-surface);
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+}
