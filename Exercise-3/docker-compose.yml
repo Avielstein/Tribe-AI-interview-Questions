@@ -6,6 +6,8 @@ services:
     environment:
       # Optional: a Claude key can also be pasted in the app (key icon in the header).
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Needed to save a key in the app (it's encrypted at rest). Generate: npm run gen:secret
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
       # live | mock (no key needed) | fail (demo the error state)
       LLM_MODE: ${LLM_MODE:-live}

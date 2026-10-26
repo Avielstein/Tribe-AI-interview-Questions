@@ -46,7 +46,7 @@ model Intake {
 // health of whichever key is active (UI key, else ANTHROPIC_API_KEY).
 model LlmSettings {
   id        Int       @id @default(1)
-  apiKey    String?   @map("api_key")
+  apiKey    String?   @map("api_key") // encrypted: "enc:v1:..." (lib/secrets.ts)
   keyStatus KeyStatus @default(UNVERIFIED) @map("key_status")
   keyError  String?   @map("key_error")
   checkedAt DateTime? @map("checked_at")

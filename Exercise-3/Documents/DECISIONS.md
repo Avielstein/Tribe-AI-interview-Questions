@@ -23,11 +23,12 @@
 - **Hard delete behind a type-to-confirm dialog** → Deleting is permanent, so the user types `delete` first. An AI job still running on a deleted intake finishes quietly (its writes match no rows) instead of erroring or recreating the record.
 - **Material 3 theme tokens, light + dark** → Colors come from M3's baseline color roles (primary, surface, on-surface, outline, error, …) defined once as CSS variables, with a dark set that follows the system. Components use the roles, never raw colors, so dark mode works everywhere and a rebrand is one file. A sun/moon toggle overrides the system choice and is remembered per browser; a tiny inline script applies it before first paint so there's no flash.
 - **Docker + `requirements.txt` for reproducibility** → `docker compose up --build` runs the app with no local Node; the database sits in a volume and migrations run on start. `requirements.txt` is a plain checklist of prerequisites; exact library versions are pinned in `package-lock.json` (`npm ci`).
-- **Key stored in plain text in local SQLite** → Fine for a local, single-user internal tool. In production: a secrets manager or encrypted column, and auth on the key page.
+- **API key encrypted at rest** → A key saved in the app is stored as AES-256-GCM ciphertext; the master key comes from `APP_ENCRYPTION_KEY` and never touches the database. A leaked database file, backup, or zip is useless on its own. Without a master key the app refuses to store a key (it never falls back to plain text); `ANTHROPIC_API_KEY` and mock mode still work. A key saved before this change is encrypted the first time it's read. In production we'd go further: keep the key in a secrets manager and store only its status (see next steps).
 
 ## How we verified it works
 
-- **Unit tests (37, `npm test`)** on the logic most likely to break: error classification (an expired key vs. a rate limit), AI output normalization, form/API validation, and money / timeline parsing and formatting.
+- **Unit tests (44, `npm test`)** on the logic most likely to break: error classification (an expired key vs. a rate limit), AI output normalization, form/API validation, money / timeline parsing and formatting, and API key encryption (round-trip, fresh IV, wrong key and tampering rejected).
+- **Key encryption through the real database layer** (on a copy of the DB): a legacy plain-text key was encrypted on first read and still decrypted correctly; a changed master key gave a clear "can't be decrypted" status instead of a crash; saving without a master key was refused (503). The live database's key was confirmed to be ciphertext.
 - **Real Claude calls through the running app:** created an intake via the API and watched it go `PENDING` → `COMPLETE` in ~9s with an accurate summary, 3 tags, and 6 concrete risks. A retry while still running was correctly refused (409).
 - **Expired-key path against the real API:** a fake key got a real 401; the intake failed with the "update your key" message, the key was marked rejected, a second intake failed in 5ms *without* calling the API, and saving a new key re-ran both to `COMPLETE`.
 - **Key page:** malformed input is rejected locally; a well-formed fake key is rejected by Anthropic and not saved; a real key saved and showed "Working".
@@ -45,7 +46,7 @@
 - **Budget stored as a string, not numbers.** Keeps the schema simple and matches the brief; it means we can't sort or filter by budget yet.
 - **No browser end-to-end tests.** Unit tests cover the logic; flows were verified by hand and through the API. Playwright would be next.
 - **No evals for triage quality.** We validate the *shape* of Claude's output, not how good the summary and risks are.
-- **API key in plain text in SQLite.** Acceptable locally; not for production.
+- **Encryption at rest, not a secrets manager.** It protects the database file, not a compromised server: whoever has the server's env vars has the master key. No key rotation tooling either; changing `APP_ENCRYPTION_KEY` means re-adding the key.
 - **Polling instead of streaming.** Simpler and good enough for a ~10s job.
 
 ## What we learned, or would do differently next time
@@ -65,5 +66,5 @@
 - **Store budget and timeline as numbers** alongside the strings, then add the dashboard (counts by tag and status) and CSV export.
 - **Edit an intake** with an option to re-run triage.
 - **Playwright end-to-end tests** for create → detail → triage, the expired-key path, and delete; build the Docker image in CI.
-- **Auth, and an encrypted (or secrets-manager) API key.**
+- **Auth on the app, and the API key in a secrets manager** (AWS/GCP Secret Manager, Vault) with only its status in the database; master-key rotation.
 - **Model choice by measurement:** compare a cheaper model against Opus on the eval set before changing the default.

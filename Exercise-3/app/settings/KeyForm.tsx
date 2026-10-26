@@ -94,9 +94,14 @@ export default function KeyForm({ initial }: { initial: KeyStatusView }) {
             {replacing ? "Replace key" : "Add a key"}
           </label>
           <p className="mt-1 text-sm text-on-surface-variant">
-            We check the key with Anthropic before saving. It&apos;s stored in the local database and never sent back
-            to the browser.
+            We check the key with Anthropic before saving. It&apos;s encrypted in the local database and never sent
+            back to the browser.
           </p>
+          {!status.canSaveInApp && (
+            <p className="mt-3 rounded-xl bg-warning-container px-4 py-3 text-sm text-on-warning-container">
+              {status.saveBlockedReason}
+            </p>
+          )}
           <input
             id="apiKey"
             type="password"
@@ -106,7 +111,7 @@ export default function KeyForm({ initial }: { initial: KeyStatusView }) {
             placeholder="sk-ant-..."
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            disabled={busy !== null}
+            disabled={busy !== null || !status.canSaveInApp}
             className={`mt-3 font-mono ${field(!!error)}`}
           />
           {error && (
@@ -115,7 +120,7 @@ export default function KeyForm({ initial }: { initial: KeyStatusView }) {
             </p>
           )}
           <div className="mt-4 flex gap-2">
-            <button type="submit" disabled={busy !== null || !apiKey.trim()} className={btnFilled}>
+            <button type="submit" disabled={busy !== null || !apiKey.trim() || !status.canSaveInApp} className={btnFilled}>
               {busy === "save" ? "Verifying with Anthropic…" : "Verify & save"}
             </button>
             {replacing && (

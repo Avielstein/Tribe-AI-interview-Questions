@@ -27,11 +27,13 @@ Open http://localhost:3000. The database lives in a Docker volume (`intake-data`
 ANTHROPIC_API_KEY=sk-ant-... docker compose up --build   # or LLM_MODE=mock
 ```
 
+To save a key in the app (rather than passing `ANTHROPIC_API_KEY`), also pass a master key: `APP_ENCRYPTION_KEY=$(openssl rand -base64 32) docker compose up --build`, and reuse the same value on later runs.
+
 ### Option 2: Node locally
 
 ```bash
 npm ci                 # exact versions from package-lock.json; also generates the Prisma client
-cp .env.example .env   # optionally add ANTHROPIC_API_KEY (or paste a key in the app later)
+cp .env.example .env   # then set APP_ENCRYPTION_KEY to the output of: npm run gen:secret
 npm run db:migrate     # creates ./dev.db and applies migrations
 npm run dev            # frontend + API in one Next.js process
 ```
@@ -43,6 +45,7 @@ Open http://localhost:3000.
 | Variable | Required | Description |
 |---|---|---|
 | `DATABASE_URL` | Yes (defaulted) | SQLite file. `file:./dev.db` locally (from `.env.example`); `file:/data/intake.db` in Docker. |
+| `APP_ENCRYPTION_KEY` | To save a key in the app | 32 random bytes, base64 (`npm run gen:secret`). Encrypts the API key in the database. Without it, the app refuses to store a key and you use `ANTHROPIC_API_KEY` instead. Keep it out of git; changing it makes a saved key unreadable (delete and re-add it). |
 | `ANTHROPIC_API_KEY` | No | Fallback Claude key. A key saved in the app takes precedence. |
 | `ANTHROPIC_MODEL` | No | Model to call. Default `claude-opus-5-5`. |
 | `LLM_MODE` | No | `live` calls Claude (default); `mock` returns a canned triage, no key needed; `fail` always errors, to demo the error state. |
@@ -54,6 +57,7 @@ npm test          # unit tests (Vitest)
 npm run lint      # ESLint
 npm run build     # production build
 npm run db:reset  # wipe and recreate the local database
+npm run gen:secret # print a new APP_ENCRYPTION_KEY
 ```
 
 ## B — What we built
@@ -91,7 +95,7 @@ One `intakes` table (Prisma + SQLite): the user's fields (`title`, `description`
 **API key management (key icon in the header → `/settings`)**
 
 - Paste a Claude API key in the app. It's checked with Anthropic (a free `models.retrieve` call) before it's saved, so a typo or revoked key is rejected up front.
-- The key is stored in the local database and never sent back to the browser; the UI shows only the last 4 characters, where it came from (the app vs. `ANTHROPIC_API_KEY`), and its status.
+- The key is **encrypted at rest** (AES-256-GCM, master key from `APP_ENCRYPTION_KEY`) and never sent back to the browser; the UI shows only the last 4 characters, where it came from (the app vs. `ANTHROPIC_API_KEY`), and its status.
 - **When a key expires or is revoked:** the AI call gets a 401, the intake is still saved but marked failed with "update your key", the key is marked rejected, and a banner appears on every page. Later intakes don't call the API with the dead key. Saving a working key automatically re-runs every intake that failed because of the key.
 - Out of credits (402) and no access to the model (403) are handled the same way. Rate limits and outages are retried by the SDK and are *not* treated as key problems.
 
@@ -119,10 +123,11 @@ UI follows Material 3 (color roles, pill buttons, outlined fields, Roboto) in li
 npm test
 ```
 
-37 unit tests on the logic most likely to break:
+44 unit tests on the logic most likely to break:
 
 - `tests/ai-errors.test.ts`: every API failure maps to the right code; an expired key (401) is a key problem, rate limits/outages are retryable, raw error text never reaches the user.
 - `tests/intake.test.ts`: form/API validation (friendly messages even for missing fields, high end ≥ low end, whole-number timeline, valid units), money shorthand parsing (`50k`, `$1.2m`), and the stored budget/timeline strings.
+- `tests/secrets.test.ts`: the API key encryption round-trips, never stores the plain text, uses a fresh IV each time, and rejects a wrong master key or a tampered value.
 - `tests/triage.test.ts`: model output is trimmed, tags lowercased and capped at 3, bad output rejected.
 
 Beyond unit tests, the flows were checked against the running app and the real Claude API (see "How we verified it works" in [DECISIONS.md](DECISIONS.md)).
